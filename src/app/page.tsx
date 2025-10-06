@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import { CldImage, CldUploadButton, CldUploadWidget, CldVideoPlayer } from "next-cloudinary";
 
@@ -14,34 +14,25 @@ type UploadResult = {
 
 export default function Home() {
   const [lastUpload, setLastUpload] = useState<UploadResult | null>(null);
+  const [signatureGet, setSignatureGet] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<Array<{ public_id: string }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/images");
+        const data = await res.json();
+        setGallery(data?.images ?? []);
+      } catch {}
+    })();
+  }, []);
 
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <h1>Next Cloudinary Starter</h1>
-        <p>Cloud name is read from <code>NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME</code>.</p>
-
         <section>
-          <h2>Optimized Image</h2>
-          <p>Sample transform with automatic format and quality.</p>
-          <div style={{ maxWidth: 400 }}>
-            <CldImage
-              width="800"
-              height="600"
-              src="sample"
-              alt="Sample from Cloudinary"
-              crop="fill"
-              gravity="auto"
-              priority
-            />
-          </div>
-        </section>
-
-        <section>
-          <h2>Upload (Unsigned)</h2>
-          <p>Opens the Cloudinary Upload Widget with default unsigned mode.</p>
-          <CldUploadWidget
-            uploadPreset=""
+          {/* <CldUploadWidget
+            signatureEndpoint="/api"
             onUpload={(result) => {
               if (result?.event === "success") {
                 const info = result.info as any;
@@ -59,11 +50,11 @@ export default function Home() {
             {({ open }) => (
               <button className={styles.primary} onClick={() => open?.()}>Open Upload Widget</button>
             )}
-          </CldUploadWidget>
+          </CldUploadWidget> */}
 
           <div style={{ marginTop: 12 }}>
             <CldUploadButton
-              uploadPreset=""
+              signatureEndpoint="/api"
               onUploadAdded={() => {}}
               onUpload={(result) => {
                 if ((result as any)?.event === "success") {
@@ -105,6 +96,20 @@ export default function Home() {
               )}
             </div>
           )}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+            {gallery.map((img) => (
+              <div key={img.public_id}>
+                <CldImage
+                  width="320"
+                  height="240"
+                  src={img.public_id}
+                  alt={img.public_id}
+                  crop="fill"
+                  gravity="auto"
+                />
+              </div>
+            ))}
+          </div>
         </section>
       </main>
     </div>
