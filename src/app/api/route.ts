@@ -47,12 +47,18 @@ export async function POST(req: NextRequest) {
 
 
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const sp = req.nextUrl.searchParams;
+    const limitParam = sp.get("limit");
+    let limit = Number.parseInt(limitParam || "12", 10);
+    if (!Number.isFinite(limit) || limit <= 0) limit = 12;
+    if (limit > 100) limit = 100;
+
     const result = await cloudinary.search
       .expression("resource_type:image")
       .sort_by("created_at", "desc")
-      .max_results(12)
+      .max_results(limit)
       .execute();
 
     const images = (result.resources || []).map((r: any) => ({

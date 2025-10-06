@@ -16,16 +16,17 @@ export default function Home() {
   const [lastUpload, setLastUpload] = useState<UploadResult | null>(null);
   const [signatureGet, setSignatureGet] = useState<string | null>(null);
   const [gallery, setGallery] = useState<Array<{ public_id: string }>>([]);
+  const [limit, setLimit] = useState<number>(12);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/images");
+        const res = await fetch(`/api?limit=${limit}`);
         const data = await res.json();
         setGallery(data?.images ?? []);
       } catch {}
     })();
-  }, []);
+  }, [limit]);
 
   return (
     <div className={styles.page}>
@@ -96,6 +97,19 @@ export default function Home() {
               )}
             </div>
           )}
+          <div style={{ margin: "8px 0 16px" }}>
+            <label>
+              Count:&nbsp;
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={limit}
+                onChange={(e) => setLimit(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
+                style={{ width: 80 }}
+              />
+            </label>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
             {gallery.map((img) => (
               <div key={img.public_id}>
